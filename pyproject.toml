@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "db-implement"
+version = "0.1.0"
+description = "Database implementation project"
+authors = ["MatthieuLeNozach <matthieu.le.nozach@gmail.com>"]
+license = "MIT"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pdfplumber = "^0.11.6"
+pandas = "^2.2.3"
+matplotlib = "^3.10.3"
+jupyterlab = "^4.4.3"
+label-studio = "^1.18.0"
+scikit-learn = "^1.6.1"
+easyocr = "^1.7.2"
+crayons = "^0.4.0"
+pymupdf = "^1.26.0"
+google-api-python-client = "^2.171.0"
+google-auth-oauthlib = "^1.2.2"
+duckdb = "^1.4.0"
+sqlite4 = "^0.1.1"
+sqlalchemy = "^2.0.43"
+alembic = "^1.16.5"
+python-dotenv = "^1.1.1"
+sqlite-web = "*"
