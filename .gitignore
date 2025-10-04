@@ -1,0 +1,59 @@
+# -----------------------
+# Python / Virtualenv
+# -----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
+.env
+.venv/
+venv/
+ENV/
+env/
+*.virtualenv
+
+# -----------------------
+# Poetry
+# -----------------------
+.poetry/
+*.lock
+
+# -----------------------
+# SQLite / DB files
+# -----------------------
+*.db
+*.sqlite3
+database/
+db_implement/*.db
+
+# -----------------------
+# Cache / temp
+# -----------------------
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+.cache/
+.ipynb_checkpoints/
+
+# -----------------------
+# IDE / editor
+# -----------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------
+# Alembic / Migrations
+# -----------------------
+alembic/versions/*.pyc

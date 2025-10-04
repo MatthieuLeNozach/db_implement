@@ -1,9 +1,7 @@
 import logging
-import os
-import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
 from src.config import Config
-from src.models import Base, Mercuriale, CustomerAssignmentCondition, Product
+from src.models import Base, Mercuriale, CustomerAssignmentCondition
 from src.importers.product_importer import ProductImporter
 from src.importers.customer_importer import CustomerImporter
 from src.importers.customer_assignment_importer import CustomerAssignmentImporter
@@ -18,9 +16,7 @@ class ImportManager:
     - Products
     - Customers
     - Assignment conditions
-    - Mercuriale population
-    - Customer assignment
-    - Mercuriale → Product association
+    - Mercuriale population & customer assignment
     """
 
     def __init__(self, session):
@@ -56,6 +52,9 @@ class ImportManager:
     # -------------------------
 
     def populate_mercuriales_from_conditions(self):
+        """
+        Ensure all Mercuriale entries exist based on CustomerAssignmentCondition table.
+        """
         logger.info("🔹 Populating Mercuriale table from assignment conditions...")
         try:
             conditions = self.session.query(CustomerAssignmentCondition).all()
@@ -76,6 +75,9 @@ class ImportManager:
             raise
 
     def assign_customers_to_mercuriales(self):
+        """
+        Assign customers based on the imported assignment conditions.
+        """
         logger.info("🔹 Assigning customers to Mercuriales based on conditions...")
         try:
             self.assignment_importer.assign_mercuriale_from_conditions()
@@ -84,58 +86,27 @@ class ImportManager:
             logger.error(f"❌ Failed to assign customers: {e}")
             raise
 
-    def populate_mercuriale_products(self):
-        """
-        Assign products to each Mercuriale based on the CSV files in db_files/mercuriales/.
-        Handles non-UTF-8 encodings gracefully.
-        """
-        logger.info("🔹 Populating Mercuriale → Product associations...")
-        folder = "db_files/mercuriales/"
-        try:
-            for file in os.listdir(folder):
-                if not file.endswith(".csv"):
-                    continue
-                mercuriale_name = file.replace(".csv", "")
-                mercuriale = self.session.query(Mercuriale).filter_by(name=mercuriale_name).first()
-                if not mercuriale:
-                    logger.warning(f"⚠️ Mercuriale not found in DB: {mercuriale_name}")
-                    continue
-
-                file_path = os.path.join(folder, file)
-
-                # Try UTF-8 first, fallback to ISO-8859-1
-                try:
-                    df = pd.read_csv(file_path, usecols=[0], dtype=str, on_bad_lines='skip')
-                except UnicodeDecodeError:
-                    logger.warning(f"⚠️ UTF-8 decoding failed for {file}, trying ISO-8859-1")
-                    df = pd.read_csv(file_path, usecols=[0], dtype=str, on_bad_lines='skip', encoding='ISO-8859-1')
-
-                skus = [str(s).strip().upper() for s in df.iloc[:, 0].dropna()]
-                products = self.session.query(Product).filter(Product.sku.in_(skus)).all()
-                mercuriale.products = products
-                self.session.add(mercuriale)
-                logger.info(f"✅ {len(products)} products assigned to {mercuriale_name}")
-
-            self.session.commit()
-            logger.info("✅ Mercuriale product associations complete.")
-
-        except Exception as e:
-            self.session.rollback()
-            logger.error(f"❌ Failed to populate Mercuriale products: {e}")
-            raise
-
     # -------------------------
     # High-level method
     # -------------------------
 
     def run_all(self):
+        """
+        Execute the full import pipeline:
+        1. Update products
+        2. Update customers
+        3. Populate Mercuriales from conditions
+        4. Assign customers
+        """
         logger.info("🚀 Starting full import pipeline...")
 
         self.update_products(Config.PRODUCT_CSV_PATH)
         self.update_customers(Config.CUSTOMER_CSV_PATH)
 
+        # Populate mercuriales based on assignment conditions
         self.populate_mercuriales_from_conditions()
+
+        # Assign customers based on assignment conditions
         self.assign_customers_to_mercuriales()
-        self.populate_mercuriale_products()
 
         logger.info("✅ Full import pipeline complete.")

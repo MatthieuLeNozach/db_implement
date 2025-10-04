@@ -1,86 +1,89 @@
-import pandas as pd
 import logging
 from sqlalchemy.exc import SQLAlchemyError
-from models import Customer, Mercuriale, Product
+from src.models.customer import Customer
+from src.models.mercuriale import Mercuriale
+from src.models.assignment_conditions import CustomerAssignmentCondition
 
 logger = logging.getLogger(__name__)
 
-
-class AssignmentImporter:
+class CustomerAssignmentImporter:
     """
-    Handles assignments between customers, mercuriales, and products.
+    Assigns customers to Mercuriales based on conditions stored in the database.
+    Rules are read from CustomerAssignmentCondition and applied in ascending priority order.
+    First matching rule wins unless overridden by a higher-priority rule with required=True.
     """
 
     def __init__(self, session):
         self.session = session
 
-    def assign_customers_to_mercuriale(self, csv_file_path: str):
+    def assign_mercuriale_from_conditions(self):
         """
-        Assign each customer to a mercuriale based on a CSV file.
-        CSV format: customer_number, mercuriale_name
+        Assign customers to Mercuriales based on DB-stored assignment conditions.
         """
-        logger.info(f"📎 Assigning customers to mercuriales from: {csv_file_path}")
+        conditions = (
+            self.session.query(CustomerAssignmentCondition)
+            .order_by(CustomerAssignmentCondition.priority.asc())
+            .all()
+        )
+        customers = self.session.query(Customer).all()
 
-        df = pd.read_csv(csv_file_path, dtype=str).fillna("")
-        assignments, skipped = 0, 0
+        for customer in customers:
+            assigned = False
 
-        for _, row in df.iterrows():
-            customer_number = row.get("customer_number", "").strip()
-            mercuriale_name = row.get("mercuriale_name", "").strip()
+            for cond in conditions:
+                field_val = getattr(customer, cond.field, None)
+                if field_val is None:
+                    continue
 
-            if not customer_number or not mercuriale_name:
-                skipped += 1
-                continue
+                field_str = str(field_val).upper()
+                cond_val_str = str(cond.value).upper()
 
-            customer = self.session.query(Customer).filter_by(customer_number=customer_number).first()
-            mercuriale = self.session.query(Mercuriale).filter_by(name=mercuriale_name).first()
+                match = False
+                if cond.operator == "equals" and field_str == cond_val_str:
+                    match = True
+                elif cond.operator == "contains" and cond_val_str in field_str:
+                    match = True
+                elif cond.operator == "not_equals" and field_str != cond_val_str:
+                    match = True
 
-            if customer and mercuriale:
-                customer.mercuriale = mercuriale
-                assignments += 1
-            else:
-                skipped += 1
+                if match:
+                    mercuriale = self.session.query(Mercuriale).filter_by(
+                        name=cond.mercuriale_name
+                    ).first()
+                    if mercuriale:
+                        customer.mercuriale = mercuriale
+                        assigned = True
+                        logger.info(
+                            f"Customer {customer.customer_number} assigned to {mercuriale.name} "
+                            f"via condition {cond.field} {cond.operator} {cond.value}"
+                        )
+                    else:
+                        logger.warning(
+                            f"Condition matched but Mercuriale {cond.mercuriale_name} not found"
+                        )
+
+                    # If the condition is required, stop checking further rules
+                    if cond.required:
+                        break
+
+            # If no condition matched, assign full-access Mercuriale (optional)
+            if not assigned:
+                full_access = self.session.query(Mercuriale).filter_by(
+                    name="mercuriale_medelys"
+                ).first()
+                if full_access:
+                    customer.mercuriale = full_access
+                    logger.info(
+                        f"Customer {customer.customer_number} assigned to full-access Mercuriale {full_access.name}"
+                    )
+                else:
+                    logger.warning(
+                        f"Customer {customer.customer_number} not assigned and full-access Mercuriale missing"
+                    )
 
         try:
             self.session.commit()
-            logger.info(f"✅ Assigned {assignments} customers. ⏩ Skipped {skipped} (not found).")
         except SQLAlchemyError as e:
-            logger.error(f"❌ Commit failed: {e}")
             self.session.rollback()
-            raise
-
-    def assign_products_to_mercuriale(self, csv_file_path: str):
-        """
-        Assign products to mercuriales based on a CSV file.
-        CSV format: mercuriale_name, sku
-        """
-        logger.info(f"📦 Assigning products to mercuriales from: {csv_file_path}")
-
-        df = pd.read_csv(csv_file_path, dtype=str).fillna("")
-        assignments, skipped = 0, 0
-
-        for _, row in df.iterrows():
-            mercuriale_name = row.get("mercuriale_name", "").strip()
-            sku = row.get("sku", "").strip()
-
-            if not mercuriale_name or not sku:
-                skipped += 1
-                continue
-
-            mercuriale = self.session.query(Mercuriale).filter_by(name=mercuriale_name).first()
-            product = self.session.query(Product).filter_by(sku=sku).first()
-
-            if mercuriale and product:
-                if product not in mercuriale.products:
-                    mercuriale.products.append(product)
-                    assignments += 1
-            else:
-                skipped += 1
-
-        try:
-            self.session.commit()
-            logger.info(f"✅ Assigned {assignments} products. ⏩ Skipped {skipped} (not found).")
-        except SQLAlchemyError as e:
-            logger.error(f"❌ Commit failed: {e}")
-            self.session.rollback()
+            logger.error(f"❌ Commit failed while assigning customers: {e}")
             raise
