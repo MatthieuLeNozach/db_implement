@@ -2,10 +2,10 @@
 from typing import Dict, Any, Optional
 from pathlib import Path
 from collections import OrderedDict
-from src.services.database_service import DatabaseService
-from src.services.customer_matching_service import CustomerMatchingService
-from src.services.pdf_extraction_service import PDFExtractionService
-from src.repositories.customer_repository import CustomerRepository
+from .database_service import DatabaseService
+from .customer_matching_service import CustomerMatchingService
+from .pdf_extraction_service import PDFExtractionService
+from repositories.customer_repository import CustomerRepository
 import logging
 
 logger = logging.getLogger(__name__)

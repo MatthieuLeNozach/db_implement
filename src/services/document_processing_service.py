@@ -5,13 +5,13 @@ import pandas as pd
 from difflib import SequenceMatcher
 import logging
 
-from src.core.constants import ProcessingResult, BCColumns
-from src.core.formats import FORMATS
-from src.services.database_service import DatabaseService
-from src.services.pdf_extraction_service import PDFExtractionService
-from src.services.po_header_extraction_service import POHeaderExtractionService
-from src.services.customer_matching_service import CustomerMatchingService
-from src.repositories.customer_repository import CustomerRepository
+from core.constants import ProcessingResult, BCColumns
+from core.formats import FORMATS
+from .database_service import DatabaseService
+from .pdf_extraction_service import PDFTableExtractionService
+from .po_header_extraction_service import POHeaderExtractionService
+from .customer_matching_service import CustomerMatchingService
+from repositories.customer_repository import CustomerRepository
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class DocumentProcessingService:
         if "extraction_rules" not in format_spec:
             raise ValueError(f"No extraction rules defined for PDF processing")
         
-        pdf_service = PDFExtractionService(format_spec["extraction_rules"])
+        pdf_service = PDFTableExtractionService(format_spec["extraction_rules"])
         return pdf_service.extract_table_data(pdf_path)
     
     def _apply_csv_extraction_rules(self, df: pd.DataFrame, rules: Dict[str, Any]) -> pd.DataFrame:

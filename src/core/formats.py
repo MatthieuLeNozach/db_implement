@@ -1,6 +1,6 @@
 import re
 from typing import Dict, Any, Optional
-from core.constants import BCColumns  # Assuming BCColumns is an Enum or similar
+from .constants import BCColumns  # Assuming BCColumns is an Enum or similar
 
 FORMATS = {
     "Compass": {

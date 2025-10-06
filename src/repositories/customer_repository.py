@@ -2,7 +2,7 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from src.models.customer import Customer
+from models.customer import Customer
 import logging
 import re
 

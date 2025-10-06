@@ -5,17 +5,17 @@ from typing import Dict, List, Optional
 import logging
 import pandas as pd
 
-from src.core.constants import ProcessingResult, BCColumns
-from src.core.formats import FORMATS
-from src.services.document_processing_service import DocumentProcessingService
-from src.services.po_header_extraction_service import POHeaderExtractionService
-from src.services.product_validation_service import ProductValidationService
-from src.services.database_service import DatabaseService
+from core.constants import ProcessingResult, BCColumns
+from core.formats import FORMATS
+from .document_processing_service import DocumentProcessingService
+from .po_header_extraction_service import POHeaderExtractionService
+from .product_validation_service import ProductValidationService
+from .database_service import DatabaseService
 
 logger = logging.getLogger(__name__)
 
 
-class PurchaseOrderPipelineService:
+class PurchaseOrderPipeline:
     """
     Main orchestration service for processing purchase order documents.
     Responsibilities:

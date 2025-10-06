@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pandas as pd
 
-from src.config import Config
+from src.core.config import Config
 from src.models import Base
 from src.importers.import_manager import ImportManager
 from src.importers.customer_assignment_importer import CustomerAssignmentCondition

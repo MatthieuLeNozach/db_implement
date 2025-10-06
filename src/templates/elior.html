@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <title>Bon Elior</title>
+  <style>
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 1rem;
+    }
+    .app-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 1.5rem 0;
+    }
+    .drag-drop-area {
+      border: 2px dashed var(--pico-muted-border-color);
+      border-radius: var(--pico-border-radius);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 1rem 0;
+    }
+    .drag-drop-area:hover, .drag-drop-area.dragover {
+      border-color: var(--pico-primary);
+      background-color: var(--pico-background-color);
+    }
+    .file-info {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="container-fluid" style="margin-bottom: 1rem;">
+    <ul>
+      <li><strong>📦 Commande Tools</strong></li>
+    </ul>
+    <ul>
+      <li><a href="{{ url_for('index') }}">📑 Extracteur de bons de commande</a></li>
+      <li><a href="{{ url_for('elior_page') }}">🚚 Générateur bon Elior</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="app-title">🚚 Générateur de bon de livraison Elior</div>
+
+    <form action="{{ url_for('generate_delivery_slip') }}" method="post" enctype="multipart/form-data" id="slipForm">
+      <label for="cdpf_number">Numéro CDPF</label>
+      <input type="number" name="cdpf_number" id="cdpf_number" required>
+
+      <label for="site_name">Nom Site</label>
+      <input type="text" name="site_name" id="site_name" required>
+
+      <label for="delivery_date">Date de livraison</label>
+      <input type="date" name="delivery_date" id="delivery_date" required>
+
+      <label for="order_number">Numéro de commande</label>
+      <input type="number" name="order_number" id="order_number" required>
+
+      <div class="drag-drop-area" onclick="document.getElementById('excelInput').click()">
+        <input type="file" name="excel_file" id="excelInput" accept=".xls,.xlsx" hidden required>
+        <h2>📁 Déposez un fichier Excel ici ou cliquez pour parcourir</h2>
+        <p>Sélectionnez un fichier Excel contenant les données</p>
+      </div>
+
+      <div id="fileInfo" class="file-info" style="display:none;">
+        <article>
+          <strong>Fichier sélectionné:</strong> <span id="fileName"></span>
+        </article>
+      </div>
+
+      <button type="submit" id="generateBtn" disabled>🚀 Générer le bon Elior</button>
+    </form>
+  </main>
+
+  <script>
+    const excelInput = document.getElementById('excelInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const generateBtn = document.getElementById('generateBtn');
+    const dragArea = document.querySelector('.drag-drop-area');
+
+    excelInput.addEventListener('change', handleFileSelect);
+
+    dragArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dragArea.classList.add('dragover');
+    });
+
+    dragArea.addEventListener('dragleave', () => {
+      dragArea.classList.remove('dragover');
+    });
+
+    dragArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        excelInput.files = files;
+        handleFileSelect();
+      }
+    });
+
+    function handleFileSelect() {
+      const file = excelInput.files[0];
+      if (file) {
+        if (!file.name.toLowerCase().endsWith('.xls') && !file.name.toLowerCase().endsWith('.xlsx')) {
+          alert('Veuillez sélectionner un fichier Excel (.xls ou .xlsx)');
+          excelInput.value = '';
+          return;
+        }
+        fileName.textContent = file.name;
+        fileInfo.style.display = 'block';
+        generateBtn.disabled = false;
+      } else {
+        fileInfo.style.display = 'none';
+        generateBtn.disabled = true;
+      }
+    }
+  </script>
+</body>
+</html>

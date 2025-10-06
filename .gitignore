@@ -57,3 +57,22 @@ db_implement/*.db
 # Alembic / Migrations
 # -----------------------
 alembic/versions/*.pyc
+temp/*
+db_files/mercuriales/mercuriale_compass.csv
+db_files/mercuriales/mercuriale_elior_fermee.csv
+db_files/mercuriales/mercuriale_elior_ouverte.csv
+db_files/mercuriales/mercuriale_medelys.csv
+db_files/mercuriales/mercuriale_sodexo_ouverte.csv
+db_files/rules/assignment_conditions.csv
+db_files/mercuriales/mercuriale_compass.csv
+db_files/mercuriales/mercuriale_medelys.csv
+db_files/mercuriales/mercuriale_sodexo_ouverte.csv
+temp/import_manager copy.py
+combined_python_code.txt
+services_merged.txt
+merged.txt
+db_files/mercuriales/mercuriale_compass.csv
+db_files/mercuriales/mercuriale_medelys.csv
+db_files/mercuriales/mercuriale_sodexo_ouverte.csv
+queries.md
+guide.md

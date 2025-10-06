@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Login - Extract PO</title>
+    <style>
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        .auth-tabs button {
+            flex: 1;
+            margin-right: 0.5rem;
+            margin-bottom: 0;
+        }
+        .auth-tabs button:last-child {
+            margin-right: 0;
+        }
+        .auth-content {
+            display: none;
+        }
+        .auth-content.active {
+            display: block;
+        }
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--muted-border-color);
+        }
+        .divider span {
+            padding: 0 1rem;
+            background: var(--background-color);
+            color: var(--muted-color);
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <section>
+            <article>
+                <header>
+                    <hgroup>
+                        <h1>🔐 Welcome</h1>
+                        <p>Sign in to access the PDF upload service.</p>
+                    </hgroup>
+                </header>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if 'successfully' in message or 'Success' in message %}
+                                <ins>{{ message }}</ins>
+                            {% else %}
+                                <mark>{{ message }}</mark>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div id="basic-auth" class="auth-content {% if not sso_enabled %}active{% endif %}">
+                    <form method="POST" action="{{ url_for('login_basic') }}">
+                        <div class="grid">
+                            <label for="username">
+                                Username
+                                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                            </label>
+                        </div>
+                        <div class="grid">
+                            <label for="password">
+                                Password
+                                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            </label>
+                        </div>
+                        <button type="submit">🔓 Sign In</button>
+                    </form>
+                </div>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

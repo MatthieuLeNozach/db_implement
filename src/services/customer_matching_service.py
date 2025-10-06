@@ -1,7 +1,7 @@
 # src/services/customer_matching_service.py
 from typing import Optional, Dict, Any, List
-from src.repositories.customer_repository import CustomerRepository
-from src.models.customer import Customer
+from repositories.customer_repository import CustomerRepository
+from models.customer import Customer
 import logging
 
 logger = logging.getLogger(__name__)

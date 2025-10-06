@@ -5,10 +5,10 @@ import pandas as pd
 import logging
 import re
 
-from src.core.constants import BCColumns, ValidationIssue
-from src.services.database_service import DatabaseService
-from src.models.product import Product
-from src.models.mercuriale import MercurialeProductAssociation
+from core.constants import BCColumns, ValidationIssue
+from .database_service import DatabaseService
+from models.product import Product
+from models.mercuriale import MercurialeProductAssociation
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 # src/models/assignment_rules.py
 from sqlalchemy import Column, Integer, String, Boolean
-from src.models.base import Base
+from .base import Base
 
 class CustomerAssignmentRule(Base):
     __tablename__ = "customer_assignment_rule"

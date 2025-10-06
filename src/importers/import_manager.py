@@ -5,7 +5,7 @@ from typing import List, Set
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.config import Config
+from src.core.config import Config
 from src.models import Base, Mercuriale, CustomerAssignmentCondition, Product
 from src.importers.product_importer import ProductImporter
 from src.importers.customer_importer import CustomerImporter

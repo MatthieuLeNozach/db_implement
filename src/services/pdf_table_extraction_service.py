@@ -11,7 +11,7 @@ from .pdf_table_extraction_service import PDFTableExtractionService
 
 logger = logging.getLogger(__name__)
 
-class PDFExtractionService:
+class PDFTablextractionService:
     """Service for extracting text and table data from PDF files."""
     
     def __init__(self, extraction_rules: Dict[str, Any]):
