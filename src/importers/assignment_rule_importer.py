@@ -1,7 +1,9 @@
+# src/importers/assignment_rule_importer.py
+
 import pandas as pd
 import logging
 from sqlalchemy.exc import SQLAlchemyError
-from src.models.assignment_rules import CustomerAssignmentRule
+from src.models.customer_assignment_rule import CustomerAssignmentRule
 
 logger = logging.getLogger(__name__)
 

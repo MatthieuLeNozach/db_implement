@@ -1,3 +1,5 @@
+# src/importers/customer_importer.py
+
 import logging
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError

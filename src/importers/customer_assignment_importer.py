@@ -1,8 +1,9 @@
+# src/importers/customer_assignment_importer.py
+
 import logging
 from sqlalchemy.exc import SQLAlchemyError
-from src.models.customer import Customer
-from src.models.mercuriale import Mercuriale
-from src.models.assignment_conditions import CustomerAssignmentCondition
+from ..models.models import Customer, Mercuriale, CustomerAssignmentCondition
+
 
 logger = logging.getLogger(__name__)
 

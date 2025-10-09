@@ -13,6 +13,7 @@ import pandas as pd
 
 from src.core.config import Config
 from src.models import Base
+from src.models.format_config import FormatConfig
 from src.importers.import_manager import ImportManager
 from src.importers.customer_assignment_importer import CustomerAssignmentCondition
 
@@ -39,6 +40,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 # Ensure tables exist
+FormatConfig.__table__.drop(engine, checkfirst=True)
 Base.metadata.create_all(engine)
 
 # ------------------------
@@ -68,6 +70,61 @@ if os.path.exists(conditions_csv):
     logger.info("✅ Assignment conditions imported.")
 else:
     logger.warning(f"⚠️ Assignment conditions CSV not found: {conditions_csv}")
+    
+    
+
+# ------------------------
+# Import format configurations (CSV -> DB table)
+# ------------------------
+if "formats" in [t.lower() for t in args.tables] or "all" in [t.lower() for t in args.tables]:
+    formats_csv = "db_files/rules/format_config.csv"
+    if os.path.exists(formats_csv):
+        logger.info(f"📥 Importing format configurations from {formats_csv}")
+        df_formats = pd.read_csv(formats_csv, dtype=str).fillna("")
+
+        for idx, row in df_formats.iterrows():
+            try:
+                logger.debug(f"Processing row {idx}: {row.to_dict()}")
+
+                # Convert list-like columns
+                strategies = [s.strip() for s in row["customer_matching_strategies"].split(",") if s.strip()]
+                company_patterns = [p.strip() for p in row["company_name_patterns"].split(",") if p.strip()]
+
+                # Check if already exists
+                exists = session.query(FormatConfig).filter_by(format_name=row["format_name"]).first()
+                if exists:
+                    logger.info(f"Skipping existing format: {row['format_name']}")
+                    continue
+
+                config = FormatConfig(
+                    format_name=row["format_name"],
+                    po_number_fuzzy=row["po_number_fuzzy"],
+                    delivery_date_regex=row["delivery_date_regex"],
+                    entity_code_regex=row["entity_code_regex"],
+                    entity_name_regex=row["entity_name_regex"],
+                    header_fuzzy=row["header_fuzzy"],
+                    skip_footer_keywords=row["skip_footer_keywords"],
+                    min_columns=int(row["min_columns"]),
+                    fuzzy_threshold=float(row["fuzzy_threshold"]),
+                    column_description=row["column_description"],
+                    column_sku=row["column_sku"],
+                    column_quantity=row["column_quantity"],
+                    column_unit=row["column_unit"],
+                    customer_matching_strategies=strategies,
+                    company_name_patterns=company_patterns
+                )
+
+                session.add(config)
+                session.commit()
+                logger.info(f"✅ Imported format configuration: {row['format_name']}")
+
+            except Exception as e:
+                session.rollback()
+                logger.error(f"❌ Failed to import row {idx} ({row['format_name']}): {e}")
+
+    else:
+        logger.warning(f"⚠️ Format configurations CSV not found: {formats_csv}")
+
 
 # ------------------------
 # Import manager

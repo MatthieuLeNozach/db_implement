@@ -1,3 +1,5 @@
+# src/importers/product_importer.py
+
 import logging
 import os
 import pandas as pd
