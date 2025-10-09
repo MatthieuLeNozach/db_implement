@@ -13,7 +13,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 sys.path.append(os.path.join(BASE_DIR, "src"))
 
 # --- Import your models ---
-from src.models import Base
+from src.models.models import Base
 
 # Alembic Config object
 config = context.config

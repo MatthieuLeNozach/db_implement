@@ -1,3 +1,6 @@
+# ------------------------
+# ENVIRONMENT SETUP
+# ------------------------
 init:
     uv python install 3.13
     uv tool install ruff@latest
@@ -5,6 +8,9 @@ init:
     pre-commit install
 
 
+# ------------------------
+# APPLICATION RUNNERS
+# ------------------------
 # Run Flask app only
 run:
     uv sync
@@ -27,6 +33,57 @@ run-all:
 # Stop all background processes
 stop:
     pkill -f sqlite_web
+
+
+# ------------------------
+# DATABASE MANAGEMENT
+# ------------------------
+
+# Initialize and populate the database with all default data.
+db-populate:
+    uv sync
+    uv run python scripts/populate_db.py
+
+# Populate only a subset of tables.
+# Usage: just db-populate-tables products customers
+db-populate-tables *TABLES:
+    uv sync
+    uv run python scripts/populate_db.py --tables {{TABLES}}
+
+# Import only format configurations, dropping and recreating the table first.
+db-populate-formats:
+    uv sync
+    uv run python scripts/populate_db.py --tables formats --drop-formats
+
+
+# ------------------------
+# ALEMBIC MIGRATIONS
+# ------------------------
+
+# # Initialize Alembic environment. Only run once.
+# alembic-init:
+#     uv sync
+#     uv run alembic init -t generic alembic
+
+# # Generate a new revision script automatically detecting model changes.
+# # Usage: just alembic-revision -m "Add new column to product table"
+# alembic-revision -m NAME:
+#     uv sync
+#     uv run alembic revision --autogenerate -m "{{NAME}}"
+
+# # Apply all outstanding migrations to the database.
+# alembic-upgrade:
+#     uv sync
+#     uv run alembic upgrade head
+
+# # Revert the last migration applied to the database.
+# alembic-downgrade:
+#     uv sync
+#     uv run alembic downgrade -1
+
+# ------------------------
+# CI/CD & DOCKER
+# ------------------------
 
 build-production:
     docker build -f .production/Dockerfile --target production -t extract-po .

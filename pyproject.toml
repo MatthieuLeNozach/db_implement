@@ -45,7 +45,8 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "alembic>=1.16.5",
     # --- Dev tools / Jupyter ---
-    "jupyterlab>=4.4.3"
+    "jupyterlab>=4.4.3",
+    "rapidfuzz>=3.14.1",
 ]
 
 [tool.hatch.build.targets.wheel]
