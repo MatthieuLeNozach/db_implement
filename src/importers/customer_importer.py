@@ -2,22 +2,16 @@
 
 import logging
 import pandas as pd
-from sqlalchemy.exc import SQLAlchemyError
-from ftfy import fix_text
-from unidecode import unidecode
-from src.models import Customer
-from src.importers.base import BaseCSVImporter
+from src.models.models import Customer
+from .base_importer import BaseImporter
 
 logger = logging.getLogger(__name__)
 
-class CustomerImporter(BaseCSVImporter):
-    """
-    Imports and cleans customer CSV data from ERP exports.
-    Fixes encoding, normalizes headers, ensures uniqueness, and populates the Customer model,
-    including 'name2'.
-    """
 
-    # Mapping normalized headers -> model fields
+class CustomerImporter(BaseImporter):
+    """Import and update customers from ERP CSV exports."""
+    
+    # Mapping normalized headers → model fields
     HEADER_MAP = {
         "n": "customer_number",
         "nom": "name",
@@ -29,85 +23,74 @@ class CustomerImporter(BaseCSVImporter):
         "2 type client": "client_type",
         "3 sous type client": "sub_client_type",
     }
-
-    def _normalize_header(self, h: str) -> str:
-        """Clean a single CSV header to match mapping keys"""
-        h = fix_text(str(h).strip())
-        h = unidecode(h)
-        h = h.replace("*", " ").replace("-", " ").replace("_", " ")
-        # ⚠ DO NOT strip digits, because 'Nom 2' is meaningful
-        h = ' '.join(h.split()).lower()
-        return h
-
+    
+    # Model fields to update
+    UPDATE_FIELDS = [
+        "name", "name2", "delivery_zone", "postal_code", "city",
+        "required_range", "client_type", "sub_client_type"
+    ]
+    
     def import_from_csv(self, csv_file_path: str):
-        logger.info(f"📦 Importing customers from: {csv_file_path}")
-
-        try:
-            df = pd.read_csv(csv_file_path, delimiter=';', skipinitialspace=True, dtype=str, encoding="latin-1")
-        except FileNotFoundError:
-            logger.error(f"❌ File not found: {csv_file_path}")
+        """Import customers from CSV file."""
+        logger.info(f"👥 Importing customers from: {csv_file_path}")
+        
+        # Read CSV
+        df = self.csv_reader.read_csv(csv_file_path, delimiter=";")
+        if df is None:
+            logger.error(f"❌ Failed to read {csv_file_path}")
             return
-        except Exception as e:
-            logger.error(f"❌ Failed to read CSV: {e}")
-            return
-
+        
         logger.info(f"Original columns: {df.columns.tolist()}")
-
-        # Fix broken characters in headers
-        df.columns = [fix_text(str(h)).strip() for h in df.columns]
-
-        # Normalize headers
-        normalized_headers = [self._normalize_header(h) for h in df.columns]
-
-        # Map to model fields and ensure uniqueness
-        new_columns = []
-        seen = {}
-        for h in normalized_headers:
-            mapped = self.HEADER_MAP.get(h, h)
-            if mapped in seen:
-                count = seen[mapped] + 1
-                mapped = f"{mapped}_{count}"
-            seen[mapped] = seen.get(mapped, 0)
-            new_columns.append(mapped)
-        df.columns = new_columns
-
-        logger.info(f"Final columns after mapping: {df.columns.tolist()}")
-        logger.debug(f"First 5 rows:\n{df.head()}")
-
+        
+        # Normalize and map headers (preserve digits for "nom 2")
+        df = self.header_normalizer.apply_header_mapping(
+            df, self.HEADER_MAP, strip_digits=False
+        )
+        logger.info(f"Final columns: {df.columns.tolist()}")
+        
+        # Drop empty rows
         df.dropna(how='all', inplace=True)
-
+        
+        # Verify customer_number column exists
+        if "customer_number" not in df.columns:
+            logger.error("❌ No customer_number column found. Cannot import.")
+            return
+        
+        # Import customers
         added, updated = 0, 0
         for idx, row in df.iterrows():
-            customer_number = str(row["customer_number"]).strip() if "customer_number" in row else ""
+            customer_number = str(row["customer_number"]).strip()
             if not customer_number:
-                logger.warning(f"Skipping row {idx} with empty customer_number")
+                logger.warning(f"⚠️ Skipping row {idx} with empty customer_number")
                 continue
-
-            customer = self.session.query(Customer).filter_by(customer_number=customer_number).first()
+            
+            # Find or create customer
+            customer = self.session.query(Customer).filter_by(
+                customer_number=customer_number
+            ).first()
+            
             if not customer:
                 customer = Customer(customer_number=customer_number)
                 self.session.add(customer)
                 added += 1
-                logger.debug(f"Adding new customer: {customer_number}")
+                logger.debug(f"➕ Adding customer: {customer_number}")
             else:
                 updated += 1
-                logger.debug(f"Updating existing customer: {customer_number}")
-
-            # Assign fields safely, use row[col] to avoid Series
-            for field in ["name", "name2", "delivery_zone", "postal_code", "city",
-                          "required_range", "client_type", "sub_client_type"]:
-                if field in row:
-                    value = row[field]
-                    if pd.notna(value) and str(value).strip() != "":
-                        if field == "required_range":
-                            setattr(customer, field, str(value).upper() == "OUI")
-                        else:
-                            setattr(customer, field, str(value).strip())
-
-        try:
-            self.session.commit()
-            logger.info(f"✅ Customers imported. Added: {added}, Updated: {updated}")
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            logger.error(f"❌ DB commit failed: {e}")
-            raise
+                logger.debug(f"🔄 Updating customer: {customer_number}")
+            
+            # Update fields
+            for field in self.UPDATE_FIELDS:
+                if field not in row:
+                    continue
+                
+                value = row[field]
+                if pd.notna(value) and str(value).strip():
+                    # Special handling for boolean field
+                    if field == "required_range":
+                        setattr(customer, field, str(value).upper() == "OUI")
+                    else:
+                        setattr(customer, field, str(value).strip())
+        
+        # Commit changes
+        self.safe_commit(f"Customers import: {added} added, {updated} updated")
+        logger.info(f"✅ Customers imported: Added={added}, Updated={updated}")
