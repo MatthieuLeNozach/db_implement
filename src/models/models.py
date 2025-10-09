@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Boolean, ForeignKey, Float, DateTime
 )
@@ -122,10 +123,19 @@ class PurchaseOrder(Base):
 
     id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey("customer.id"))
-    date = Column(DateTime)
+    po_number = Column(String, nullable=False, unique=True)
+    delivery_date = Column(DateTime, nullable=True)
+    entity_code = Column(String, nullable=True)
+    entity_name = Column(String, nullable=True)
+    customer_number = Column(String, nullable=True)
+    file_name = Column(String, nullable=True)
+    processing_date = Column(DateTime, default=datetime.utcnow)
+    processing_duration = Column(Float, nullable=True)  # 👈 NEW FIELD (seconds)
+    date = Column(DateTime, default=datetime.utcnow)
 
     customer = relationship("Customer", back_populates="orders")
-    lines = relationship("PurchaseOrderLine", back_populates="order")
+    lines = relationship("PurchaseOrderLine", back_populates="order", cascade="all, delete-orphan")
+
 
 
 class PurchaseOrderLine(Base):
@@ -133,9 +143,14 @@ class PurchaseOrderLine(Base):
 
     id = Column(Integer, primary_key=True)
     order_id = Column(Integer, ForeignKey("purchase_order.id"))
-    product_id = Column(Integer, ForeignKey("product.id"))
+    product_id = Column(Integer, ForeignKey("product.id"), nullable=True)
+    sku = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     quantity = Column(Integer)
+    unit = Column(String, nullable=True)
+    comment = Column(String, nullable=True)
 
+    # Relationships
     order = relationship("PurchaseOrder", back_populates="lines")
     product = relationship("Product")
 

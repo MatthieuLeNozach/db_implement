@@ -4,6 +4,7 @@ Unified Purchase Order Processing Service
 Handles end-to-end processing of PO PDFs with clear logging and structured output
 """
 
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
@@ -377,21 +378,18 @@ class DataMapper:
 # MAIN SERVICE
 # ============================================================================
 
+
 class PurchaseOrderService:
     """Main service for processing purchase orders"""
     
-    def __init__(self, rules_config: Dict[str, Dict[str, Any]]):
-        self.rules_config = rules_config
-        logger.info(f"🚀 PurchaseOrderService initialized with {len(rules_config)} formats")
-    
     def process_file(self, file_path: Path, customer_format: str) -> POProcessingResult:
-        """Process a single PO file"""
+        start_time = time.time()  # 👈 START TIMER
+        
         logger.info(f"\n{'='*80}")
         logger.info(f"🔄 PROCESSING: {file_path.name}")
         logger.info(f"   Format: {customer_format}")
         logger.info(f"{'='*80}\n")
         
-        # Validate format
         if customer_format not in self.rules_config:
             error = f"Unknown customer format: {customer_format}"
             logger.error(f"❌ {error}")
@@ -401,29 +399,23 @@ class PurchaseOrderService:
                 customer_format=customer_format,
                 error_message=error
             )
-        
+
         rules = self.rules_config[customer_format]
-        
+
         try:
-            # Initialize components
             extractor = PDFExtractor(rules)
             mapper = DataMapper(rules)
-            
-            # Extract text
+
             full_text = extractor.extract_full_text(file_path)
             if not full_text:
                 raise ValueError("No text could be extracted from PDF")
-            
-            # Extract header
+
             header = extractor.extract_header_info(full_text)
-            
-            # Extract table
             df = extractor.extract_table_data(file_path)
-            
-            # Map to lines
             lines = mapper.map_table_to_lines(df)
-            
-            # Create result
+
+            processing_duration = round(time.time() - start_time, 3)  # 👈 END TIMER
+
             result = POProcessingResult(
                 success=True,
                 file_name=file_path.name,
@@ -436,21 +428,20 @@ class PurchaseOrderService:
                     'columns_found': df.columns.tolist() if not df.empty else []
                 }
             )
-            
+
+            # Add processing duration to result for database save
+            result.validation_stats["processing_duration"] = processing_duration
+
             logger.info(f"\n{'='*80}")
             logger.info(f"✅ SUCCESS: {file_path.name}")
             logger.info(f"   Lines: {len(lines)}")
-            logger.info(f"   Header fields: {len([v for v in asdict(header).values() if v])}")
+            logger.info(f"   Duration: {processing_duration:.3f} sec")  # 👈 LOG IT
             logger.info(f"{'='*80}\n")
-            
+
             return result
-            
+
         except Exception as e:
-            logger.error(f"\n{'='*80}")
-            logger.error(f"❌ FAILED: {file_path.name}")
-            logger.error(f"   Error: {e}")
-            logger.error(f"{'='*80}\n", exc_info=True)
-            
+            logger.error(f"❌ FAILED: {file_path.name} — {e}", exc_info=True)
             return POProcessingResult(
                 success=False,
                 file_name=file_path.name,
@@ -476,24 +467,24 @@ class DatabaseIntegration:
         
         try:
             with self.db_service.get_session() as session:
-                from models.purchase_order import PurchaseOrder, PurchaseOrderLine
-                
-                # Create PO header
+                from models.models import PurchaseOrder, PurchaseOrderLine
+
                 po = PurchaseOrder(
                     po_number=result.header.po_number,
                     delivery_date=result.header.delivery_date,
                     entity_code=result.header.entity_code,
                     entity_name=result.header.entity_name,
                     customer_number=result.header.customer_number,
-                    file_name=result.file_name
+                    file_name=result.file_name,
+                    processing_date=datetime.utcnow(),
+                    processing_duration=result.validation_stats.get("processing_duration")  # 👈 NEW
                 )
                 session.add(po)
-                session.flush()  # Get PO ID
-                
-                # Create PO lines
+                session.flush()
+
                 for line in result.lines:
                     po_line = PurchaseOrderLine(
-                        purchase_order_id=po.id,
+                        order_id=po.id,
                         sku=line.sku,
                         description=line.description,
                         quantity=line.quantity,
@@ -504,42 +495,15 @@ class DatabaseIntegration:
                 
                 session.commit()
                 
-                logger.info(f"💾 Saved PO to database: {po.po_number} with {len(result.lines)} lines")
-                
+                logger.info(f"💾 Saved PO {po.po_number} in {po.processing_duration:.3f}s with {len(result.lines)} lines")
+
                 return {
                     "saved": True,
                     "po_id": po.id,
-                    "lines_saved": len(result.lines)
+                    "lines_saved": len(result.lines),
+                    "processing_duration": po.processing_duration
                 }
-                
+
         except Exception as e:
             logger.error(f"❌ Database save failed: {e}", exc_info=True)
             return {"saved": False, "error": str(e)}
-
-
-# ============================================================================
-# EXAMPLE USAGE
-# ============================================================================
-
-if __name__ == "__main__":
-    # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Load rules
-    rules = ExtractionRulesLoader.load_from_csv(Path("config/extraction_rules.csv"))
-    
-    # Create service
-    service = PurchaseOrderService(rules)
-    
-    # Process file
-    result = service.process_file(
-        Path("data/po_files/Compass/sample.pdf"),
-        "Compass"
-    )
-    
-    # Output as JSON
-    import json
-    print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))

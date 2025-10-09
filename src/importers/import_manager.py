@@ -40,7 +40,7 @@ class ImportManager:
         Args:
             csv_path: Path to product CSV (defaults to Config.PRODUCT_CSV_PATH)
         """
-        path = csv_path or Config.PRODUCT_CSV_PATH
+        path = csv_path or Config.paths.PRODUCT_CSV_PATH
         logger.info("📦 Starting product import...")
         
         try:
@@ -55,9 +55,9 @@ class ImportManager:
         Import customers from CSV.
         
         Args:
-            csv_path: Path to customer CSV (defaults to Config.CUSTOMER_CSV_PATH)
+            csv_path: Path to customer CSV (defaults to Config.paths.CUSTOMER_CSV_PATH)
         """
-        path = csv_path or Config.CUSTOMER_CSV_PATH
+        path = csv_path or Config.paths.CUSTOMER_CSV_PATH
         logger.info("👥 Starting customer import...")
         
         try:

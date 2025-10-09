@@ -12,7 +12,7 @@ class DatabaseService:
     """Centralized database connection and session management."""
     
     def __init__(self, db_path: str = None):
-        db_url = db_path or Config.DATABASE_URL
+        db_url = db_path or Config.database.DATABASE_URL
         self.engine = create_engine(db_url)
         self.SessionLocal = sessionmaker(bind=self.engine)
     
