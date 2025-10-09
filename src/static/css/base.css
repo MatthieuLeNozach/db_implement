@@ -1,0 +1,54 @@
+/* ============================================================================
+   BASE STYLES AND VARIABLES
+   ============================================================================ */
+
+:root {
+    /* App Variables */
+    --app-max-width: 1400px;
+    --app-padding: 1rem;
+    --app-border-radius: var(--pico-border-radius);
+    --tutorial-padding: 1.5rem;
+    --step-gap: 1.5rem;
+    
+    /* Animation Variables */
+    --transition-speed: 0.3s;
+    --animation-easing: ease-out;
+}
+
+/* Container and Layout */
+.container {
+    max-width: var(--app-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 var(--app-padding);
+}
+
+.app-title {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin: 1.5rem 0 0.8rem;
+}
+
+/* Flash Messages */
+.flash-messages {
+    margin-bottom: 1rem;
+}
+
+/* Loading States */
+.loading {
+    display: none;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 1.8rem;
+    }
+    
+    .container {
+        padding: 0 0.5rem;
+    }
+}

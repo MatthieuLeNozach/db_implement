@@ -28,6 +28,11 @@ class PathConfig:
     MERCURIALES_DIR = DATA_DIR / "mercuriales"
     UPLOAD_DIR = PROJECT_ROOT / "uploads"
     
+    # Static files
+    STATIC_DIR = PROJECT_ROOT / "src" / "static"
+    CSS_DIR = STATIC_DIR / "css"
+    JS_DIR = STATIC_DIR / "js"
+    
     # CSV file paths
     PRODUCT_CSV_PATH = os.getenv(
         "PRODUCT_CSV_PATH",
@@ -60,6 +65,11 @@ class PathConfig:
             attr = getattr(cls, attr_name)
             if isinstance(attr, Path) and attr_name.endswith("_DIR"):
                 attr.mkdir(parents=True, exist_ok=True)
+        
+        # Add static directories
+        cls.STATIC_DIR.mkdir(parents=True, exist_ok=True)
+        cls.CSS_DIR.mkdir(parents=True, exist_ok=True)
+        cls.JS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class DatabaseConfig:

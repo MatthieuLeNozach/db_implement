@@ -1,0 +1,86 @@
+/* ============================================================================
+   PAGE-SPECIFIC STYLES
+   ============================================================================ */
+
+/* Login Page */
+.auth-container {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.auth-tabs button {
+    flex: 1;
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+}
+
+.auth-tabs button:last-child {
+    margin-right: 0;
+}
+
+.auth-content {
+    display: none;
+}
+
+.auth-content.active {
+    display: block;
+}
+
+.divider {
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--muted-border-color);
+}
+
+.divider span {
+    padding: 0 1rem;
+    background: var(--background-color);
+    color: var(--muted-color);
+}
+
+/* Index Page */
+.customer-select-container label[for="customerSelect"] {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.customer-select-container #customerSelect {
+    font-size: 1rem;
+    padding: 0.5rem 0.7rem;
+}
+
+/* Elior Page */
+.elior-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,263 @@
+/* ============================================================================
+   REUSABLE COMPONENTS
+   ============================================================================ */
+
+/* Navigation */
+.main-nav {
+    margin-bottom: 1rem;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Theme Switcher */
+.theme-switcher {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem;
+    border-radius: var(--app-border-radius);
+    background: var(--pico-card-background-color);
+    border: var(--pico-border-width) solid var(--pico-border-color);
+}
+
+.theme-toggle select {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    margin: 0;
+}
+
+/* Drag & Drop Component */
+.drag-drop-area {
+    border: 2px dashed var(--pico-muted-border-color);
+    border-radius: var(--app-border-radius);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    margin: 1rem 0;
+}
+
+.drag-drop-area:hover, 
+.drag-drop-area.dragover {
+    border-color: var(--pico-primary);
+    background-color: var(--pico-background-color);
+}
+
+.drag-drop-area input[type="file"] {
+    display: none;
+}
+
+.file-info {
+    display: none;
+    margin-top: 1rem;
+}
+
+/* Copy Button Component */
+.copy-button {
+    background: var(--pico-primary);
+    color: white;
+    border: none;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+    background: var(--pico-primary-hover);
+}
+
+.copy-button:active {
+    transform: scale(0.95);
+}
+
+.copy-button.copied {
+    background: #28a745;
+}
+
+/* Tutorial Component */
+.tutorial-section {
+    margin: 1.5rem 0;
+}
+
+.tutorial-dropdown {
+    background: var(--pico-card-background-color);
+    border-radius: var(--app-border-radius);
+    border: 1px solid var(--pico-border-color);
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+}
+
+.tutorial-dropdown:hover {
+    border-color: var(--pico-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-header {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    background: var(--pico-background-color);
+    border-bottom: 1px solid var(--pico-muted-border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition-speed) ease;
+    list-style: none;
+}
+
+.tutorial-header:hover {
+    background: var(--pico-primary-background);
+}
+
+.tutorial-header h2 {
+    margin: 0;
+    color: var(--pico-primary);
+    font-size: 1.2rem;
+}
+
+.tutorial-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--pico-muted-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.toggle-icon {
+    font-size: 1rem;
+    transition: transform var(--transition-speed) ease;
+    color: var(--pico-primary);
+}
+
+.tutorial-dropdown[open] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.tutorial-container {
+    padding: var(--tutorial-padding);
+    animation: slideDown var(--transition-speed) var(--animation-easing);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tutorial-steps {
+    display: grid;
+    gap: var(--step-gap);
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--pico-background-color);
+    border-radius: var(--app-border-radius);
+    border: 1px solid var(--pico-muted-border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tutorial-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--pico-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.step-content h3 {
+    margin: 0 0 0.4rem 0;
+    color: var(--pico-primary);
+    font-size: 1.1rem;
+}
+
+.step-content p {
+    margin: 0 0 0.8rem 0;
+    color: var(--pico-color);
+    font-size: 0.9rem;
+}
+
+/* Results Component */
+.results-section {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--pico-card-background-color);
+    border-radius: var(--app-border-radius);
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.results-left, .results-right {
+    background: var(--pico-card-background-color);
+    padding: 1.2rem;
+    border-radius: var(--app-border-radius);
+    border: 1px solid var(--pico-border-color);
+}
+
+/* Tables */
+table {
+    font-size: 0.9rem;
+}
+
+table th {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+table td {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+}
+
+/* Responsive Components */
+@media (max-width: 768px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .tutorial-step {
+        flex-direction: column;
+        text-align: center;
+    }
+}

@@ -43,7 +43,7 @@ except ConfigurationError as e:
     exit(1)
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 # 2. Apply centralized Flask configuration
 app.config.update(Config.get_flask_config())
@@ -76,7 +76,7 @@ except Exception as e:
     logger.error(f"❌ Failed to load extraction rules: {e}")
     raise
 
-po_service = PurchaseOrderService(rules_config)
+po_service = PurchaseOrderService()
 db_integration = DatabaseIntegration(db_service)
 
 logger.info(f"✅ Service initialized with {len(rules_config)} customer formats")

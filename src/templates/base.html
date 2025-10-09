@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="{% block lang %}fr{% endblock %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+    
+    <title>{% block title %}Extract PO{% endblock %}</title>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    {% block navigation %}
+    <nav class="container-fluid main-nav">
+        <ul>
+            <li class="nav-brand">
+                <strong>📦 Commande Tools</strong>
+            </li>
+        </ul>
+        <ul>
+            <li><a href="{{ url_for('index') }}">📑 PDF Extractor</a></li>
+            <li><a href="{{ url_for('elior_page') }}">🚚 Elior Generator</a></li>
+            {% block extra_nav_items %}{% endblock %}
+        </ul>
+    </nav>
+    {% endblock %}
+
+    <!-- Theme Switcher -->
+    {% block theme_switcher %}
+    <div class="theme-switcher">
+        <div class="theme-toggle">
+            <span>🎨</span>
+            <select onchange="setTheme(this.value)">
+                <option value="auto">Auto</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+    {% endblock %}
+
+    <main class="container">
+        <!-- Flash Messages -->
+        {% block flash_messages %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        {% if 'successfully' in message or 'Success' in message %}
+                            <ins>{{ message }}</ins>
+                        {% else %}
+                            <mark>{{ message }}</mark>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% endblock %}
+
+        <!-- Page Title -->
+        {% block page_title %}
+        <div class="app-title">
+            {% block title_content %}Extract PO{% endblock %}
+        </div>
+        {% endblock %}
+
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Base JavaScript -->
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components.js') }}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
