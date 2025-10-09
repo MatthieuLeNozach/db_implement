@@ -1,3 +1,6 @@
+# src/core/logging.py
+
+
 """
 Logging configuration module for Purchase Order Processing System.
 
