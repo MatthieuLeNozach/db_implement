@@ -5,13 +5,15 @@ from contextlib import contextmanager
 from core.config import Config
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 class DatabaseService:
-    """Handles database connections and session management."""
+    """Centralized database connection and session management."""
     
-    def __init__(self):
-        self.engine = create_engine(Config.DATABASE_URL)
+    def __init__(self, db_path: str = None):
+        db_url = db_path or Config.DATABASE_URL
+        self.engine = create_engine(db_url)
         self.SessionLocal = sessionmaker(bind=self.engine)
     
     @contextmanager
