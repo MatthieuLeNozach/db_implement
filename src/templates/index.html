@@ -1,28 +1,217 @@
+{# index.html #}
+
 {% extends "base.html" %}
 
 {% block title %}Extract PO - PDF Processor{% endblock %}
-{% block title_content %}📑 Extract PO{% endblock %}
+{% block title_content %}📄 Extract PO{% endblock %}
 
 {% block content %}
-<!-- Tutorial Section -->
 <div class="tutorial-section">
-    <details class="tutorial-dropdown">
-        <summary class="tutorial-header">
-            <h2>📚 Comment utiliser l'extracteur de bons de commande</h2>
-            <div class="tutorial-toggle">
-                <span class="toggle-text">cliquez pour voir le guide</span>
-                <span class="toggle-icon">▼</span>
-            </div>
-        </summary>
-        <div class="tutorial-container">
-            <!-- Your existing tutorial content -->
+  <details class="tutorial-dropdown">
+    <summary class="tutorial-header">
+      <h2>📚 Comment utiliser l'extracteur de bons de commande</h2>
+      <div class="tutorial-toggle">
+        <span class="toggle-text">cliquez pour voir le guide</span>
+        <span class="toggle-icon">▼</span>
+      </div>
+    </summary>
+    <div class="tutorial-container">
+      <div class="tutorial-intro">
+        <p>Suivez ces étapes simples pour extraire les informations de vos bons de commande PDF.</p>
+      </div>
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Sélectionnez votre client</h3>
+            <p>Choisissez le client concerné dans le menu déroulant ci-dessous.</p>
+          </div>
         </div>
-    </details>
+        <div class="tutorial-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Déposez votre PDF</h3>
+            <p>Glissez-déposez ou cliquez dans la zone pour sélectionner votre bon de commande PDF.</p>
+          </div>
+        </div>
+        <div class="tutorial-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Lancez l'analyse</h3>
+            <p>Cliquez sur "Analyser le PDF" pour lancer le traitement et afficher les résultats.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
 </div>
 
-<!-- Upload Form -->
 <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
-    <!-- Customer Selection -->
-    <div class="customer-select-container">
-        <label for="customerSelect">Sélectionner un client</label>
-        <select name
+  <div class="customer-select-container">
+    <label for="customerSelect">Sélectionner un client</label>
+    <select name="customer" id="customerSelect" required>
+      <option value="">Choisissez un client...</option>
+      {% if available_customers %}
+        {% for customer in available_customers %}
+          <option value="{{ customer }}">{{ customer }}</option>
+        {% endfor %}
+      {% else %}
+        <option value="" disabled>Aucun client disponible</option>
+      {% endif %}
+    </select>
+  </div>
+
+  <div class="drag-drop-area" onclick="document.getElementById('pdfInput').click()">
+    <input type="file" name="pdf" id="pdfInput" accept=".pdf" hidden required>
+    <h2>📄 Déposez un fichier PDF ici ou cliquez pour parcourir</h2>
+    <p>Sélectionnez un bon de commande PDF à traiter</p>
+  </div>
+
+  <div id="fileInfo" class="file-info">
+    <article>
+      <strong>Fichier sélectionné:</strong> <span id="fileName"></span>
+    </article>
+  </div>
+
+  <button type="submit" id="uploadBtn" disabled>🚀 Analyser le PDF</button>
+</form>
+
+<div id="loading" class="loading">
+  <article aria-busy="true">
+    <p>Traitement du PDF en cours...</p>
+  </article>
+</div>
+
+{% if results %}
+<section class="results-section">
+  <h2>📊 Résumé du traitement</h2>
+  <article>
+    <h3>🏢 Client: {{ results.customer }}</h3>
+    <p><strong>📁 Fichier:</strong> {{ results.filename }}</p>
+
+    {% set summary = results.summary %}
+    {% if summary %}
+    <div class="results-grid">
+
+      <!-- HEADER INFO -->
+      <div class="results-left">
+        {% if results.summary.header %}
+        <h4>📋 Informations d’en-tête</h4>
+        <ul>
+        {% for key, value in results.summary.header.items() %}
+            <li class="field-with-copy">
+            <span><strong>{{ key.replace('_',' ').title() }}:</strong> {{ value or 'N/A' }}</span>
+            {% if value %}
+            <button class="copy-button" onclick="copyToClipboard('{{ value }}', this)">📋 Copier</button>
+            {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+{% set ps = results.summary.validation_stats %}
+{% if ps %}
+<h4>📊 Résumé du traitement</h4>
+<ul>
+  <li><strong>Total lignes:</strong> {{ ps.total_lines }}</li>
+  <li><strong>Lignes valides:</strong> {{ ps.total_lines }}</li>  {# optionally compute valid lines if you mark them #}
+  <li><strong>Durée:</strong> {{ ps.processing_duration }}s</li>
+  {% if ps.columns_found %}
+  <li><strong>Colonnes détectées:</strong> {{ ps.columns_found | join(', ') }}</li>
+  {% endif %}
+</ul>
+{% endif %}
+
+      <!-- LINES / TABLES -->
+      <div class="results-right">
+        {% if summary.clean_data %}
+        <div>
+          <div class="table-copy-container">
+            <h4><strong>✅ Tableau de commande ({{ summary.clean_data|length }} lignes)</strong></h4>
+            <button class="copy-button" onclick="copyTableData(this)">📋 Copier le tableau</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <table id="cleanDataTable">
+              <thead>
+                <tr>
+                  {% for header in summary.clean_data[0].keys() %}
+                  <th>{{ header.replace('_', ' ').title() }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in summary.clean_data %}
+                <tr>
+                  {% for value in row.values() %}
+                  <td>{{ value }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if summary.faulty_data %}
+        <div style="margin-top: 2rem;">
+          <h4><strong>❌ Lignes erronées ({{ summary.faulty_data|length }} lignes)</strong></h4>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  {% for header in summary.faulty_data[0].keys() %}
+                  <th>{{ header.replace('_', ' ').title() }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in summary.faulty_data %}
+                <tr style="background-color: #ffebee;">
+                  {% for value in row.values() %}
+                  <td>{{ value }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </article>
+
+  <details>
+    <summary><strong>🔍 Debug Info</strong></summary>
+    <div style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-messages" style="margin-bottom: 1rem;">
+        <h5>📨 Flash Messages:</h5>
+        {% for category, message in messages %}
+        <div style="margin: 0.5rem 0; padding: 0.5rem; border-radius: 4px; background:
+          {% if category == 'success' %}#e8f5e8{% elif category == 'warning' %}#fff3cd{% elif category == 'error' %}#f8d7da{% else %}#d1ecf1{% endif %};">
+          {% if category == 'success' %}🟢{% elif category == 'warning' %}🟡{% elif category == 'error' %}🔴{% else %}ℹ️{% endif %}
+          <strong>{{ category.title() }}:</strong> {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      <h5>📋 Summary Data:</h5>
+      <pre>{{ summary | pprint }}</pre>
+    </div>
+  </details>
+
+  <form method="post" action="{{ url_for('clear_results') }}">
+    <button type="submit" class="secondary">🗑️ Réinitialiser</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}

@@ -1,3 +1,4 @@
+//src/js/components.js
 // ============================================================================
 // COMPONENT JAVASCRIPT
 // ============================================================================
@@ -8,7 +9,7 @@ class FileUploadHandler {
         this.input = document.getElementById(inputId);
         this.dropArea = document.querySelector(dropAreaSelector);
         this.fileInfo = document.querySelector(fileInfoSelector);
-        this.fileName = document.querySelector('#fileName');
+        this.fileName = this.fileInfo ? this.fileInfo.querySelector('#fileName, .file-name') : null;
         this.submitBtn = document.querySelector('button[type="submit"]');
         
         this.init();
@@ -44,9 +45,14 @@ class FileUploadHandler {
         const file = this.input.files[0];
         if (file) {
             if (this.validateFile(file)) {
-                this.fileName.textContent = file.name;
-                this.fileInfo.style.display = 'block';
-                if (this.submitBtn) this.submitBtn.disabled = false;
+                if (this.fileName) {
+                    this.fileName.textContent = file.name;
+                }
+                if (this.fileInfo) {
+                    this.fileInfo.style.display = 'block';
+                }
+                // Don't automatically enable submit button - let page logic handle it
+                this.onFileSelected(file);
             } else {
                 this.reset();
             }
@@ -60,9 +66,18 @@ class FileUploadHandler {
         return true;
     }
     
+    onFileSelected(file) {
+        // Hook for additional logic after file selection
+        // Override in page-specific code if needed
+    }
+    
     reset() {
-        this.fileInfo.style.display = 'none';
-        if (this.submitBtn) this.submitBtn.disabled = true;
+        if (this.fileInfo) {
+            this.fileInfo.style.display = 'none';
+        }
+        if (this.submitBtn) {
+            this.submitBtn.disabled = true;
+        }
         this.input.value = '';
     }
 }
@@ -74,6 +89,14 @@ class PDFUploadHandler extends FileUploadHandler {
             alert('Veuillez sélectionner un fichier PDF');
             return false;
         }
+        
+        // Check file size (16MB limit)
+        const maxSize = 16 * 1024 * 1024; // 16MB in bytes
+        if (file.size > maxSize) {
+            alert('Le fichier dépasse la limite de 16 Mo. Veuillez choisir un fichier plus petit.');
+            return false;
+        }
+        
         return true;
     }
 }
@@ -107,5 +130,62 @@ class FormLoadingManager {
                 if (this.results) this.results.style.display = 'none';
             });
         }
+    }
+}
+
+// Multi-field Form Validator
+class MultiFieldValidator {
+    constructor(formSelector, requiredFields, submitButtonSelector) {
+        this.form = document.querySelector(formSelector);
+        this.requiredFields = requiredFields; // Array of field selectors
+        this.submitButton = document.querySelector(submitButtonSelector);
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.form || !this.submitButton) return;
+        
+        // Add event listeners to all required fields
+        this.requiredFields.forEach(fieldSelector => {
+            const field = document.querySelector(fieldSelector);
+            if (field) {
+                field.addEventListener('change', () => this.validate());
+                field.addEventListener('input', () => this.validate());
+            }
+        });
+        
+        // Initial validation
+        this.validate();
+    }
+    
+    validate() {
+        let allValid = true;
+        
+        this.requiredFields.forEach(fieldSelector => {
+            const field = document.querySelector(fieldSelector);
+            if (!field) {
+                allValid = false;
+                return;
+            }
+            
+            // Check based on field type
+            if (field.type === 'file') {
+                if (!field.files || field.files.length === 0) {
+                    allValid = false;
+                }
+            } else if (field.tagName === 'SELECT') {
+                if (!field.value || field.value === '') {
+                    allValid = false;
+                }
+            } else {
+                if (!field.value || field.value.trim() === '') {
+                    allValid = false;
+                }
+            }
+        });
+        
+        this.submitButton.disabled = !allValid;
+        return allValid;
     }
 }
