@@ -381,6 +381,9 @@ class DataMapper:
 
 class PurchaseOrderService:
     """Main service for processing purchase orders"""
+
+    def __init__(self, rules_config):
+        self.rules_config = rules_config
     
     def process_file(self, file_path: Path, customer_format: str) -> POProcessingResult:
         start_time = time.time()  # 👈 START TIMER
